@@ -1,0 +1,163 @@
+PROGRAM:
+
+#include <stdio.h>
+// #include <conio.h>    ← removed (non-standard, not needed)
+#include <stdlib.h>
+
+#define MAX_P 10
+#define MAX_R 10
+
+int p, r;                    // number of processes, number of resource types
+int avail[MAX_R + 1];        // available resources
+int max[MAX_P + 1][MAX_R + 1];
+int alloc[MAX_P + 1][MAX_R + 1];
+int need[MAX_P + 1][MAX_R + 1];
+int safe_sequence[MAX_P + 1];
+int work[MAX_R + 1];         // temporary available during safety check
+int finish[MAX_P + 1];
+
+void input_data() {
+    printf("\nEnter the number of processes: ");
+    scanf("%d", &p);
+
+    printf("Enter the number of resource types: ");
+    scanf("%d", &r);
+
+    // Input Available resources
+    printf("\nEnter the AVAILABLE resources:\n");
+    for (int j = 1; j <= r; j++) {
+        printf("Resource type %d: ", j);
+        scanf("%d", &avail[j]);
+    }
+
+    // Input Max matrix
+    printf("\nEnter the MAXIMUM demand matrix:\n");
+    for (int i = 1; i <= p; i++) {
+        printf("\nProcess %d:\n", i);
+        for (int j = 1; j <= r; j++) {
+            printf("  Max for resource %d: ", j);
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    // Input Allocation matrix + update Available
+    printf("\nEnter the ALLOCATION matrix:\n");
+    for (int i = 1; i <= p; i++) {
+        printf("\nProcess %d:\n", i);
+        for (int j = 1; j <= r; j++) {
+            printf("  Allocated resource %d: ", j);
+            int m;
+            scanf("%d", &m);
+
+            if (m > max[i][j]) {
+                printf("Error: Allocation > Max for P%d, R%d → invalid!\n", i, j);
+                exit(1);
+            }
+            if (m > avail[j]) {
+                printf("Error: Not enough available resources for P%d, R%d!\n", i, j);
+                exit(1);
+            }
+
+            alloc[i][j] = m;
+            avail[j] -= m;
+        }
+    }
+}
+
+void calculate_need() {
+    for (int i = 1; i <= p; i++) {
+        for (int j = 1; j <= r; j++) {
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+}
+
+void display_need_and_matrices() {
+    printf("\n----------------------------------------\n");
+    printf("NEED matrix:\n");
+    for (int i = 1; i <= p; i++) {
+        printf("P%-2d : ", i);
+        for (int j = 1; j <= r; j++) {
+            printf("%3d ", need[i][j]);
+        }
+        printf("\n");
+    }
+
+    printf("\nAvailable now: ");
+    for (int j = 1; j <= r; j++) {
+        printf("%d ", avail[j]);
+    }
+    printf("\n----------------------------------------\n");
+}
+
+int is_safe() {
+    // Initialize work = avail, finish = false
+    for (int j = 1; j <= r; j++) {
+        work[j] = avail[j];
+    }
+    for (int i = 1; i <= p; i++) {
+        finish[i] = 0;
+    }
+
+    int count = 0;
+    int pos = 1;
+
+    while (count < p) {
+        int found = 0;
+
+        for (int i = 1; i <= p; i++) {
+            if (finish[i] == 1) continue;
+
+            // Check if process i can be executed
+            int can_run = 1;
+            for (int j = 1; j <= r; j++) {
+                if (need[i][j] > work[j]) {
+                    can_run = 0;
+                    break;
+                }
+            }
+
+            if (can_run) {
+                // Pretend we allocate → release resources
+                for (int j = 1; j <= r; j++) {
+                    work[j] += alloc[i][j];
+                }
+                finish[i] = 1;
+                safe_sequence[pos++] = i;
+                count++;
+                found = 1;
+            }
+        }
+
+        if (found == 0) {
+            // No process could be scheduled → unsafe
+            return 0;
+        }
+    }
+
+    return 1; // safe
+}
+
+int main() {
+    input_data();
+    calculate_need();
+    display_need_and_matrices();
+
+    printf("\nRunning Banker's Safety Algorithm...\n");
+
+    if (is_safe()) {
+        printf("\nSYSTEM IS IN SAFE STATE\n");
+        printf("Safe sequence: ");
+        for (int i = 1; i <= p; i++) {
+            printf("P%d ", safe_sequence[i]);
+        }
+        printf("\n");
+    } else {
+        printf("\nSYSTEM IS IN UNSAFE STATE\n");
+        printf("Deadlock may occur!\n");
+    }
+
+    printf("\n");
+    return 0;
+}
+
