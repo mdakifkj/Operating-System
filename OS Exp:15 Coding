@@ -1,0 +1,204 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_REQUESTS 50
+
+// FCFS
+void fcfs(int requests[], int n, int head) {
+    int seekTime = 0;
+
+    printf("\nFCFS Disk Scheduling:\n");
+
+    for (int i = 0; i < n; i++) {
+        seekTime += abs(requests[i] - head);
+        head = requests[i];
+    }
+
+    printf("Total seek time: %d\n", seekTime);
+}
+
+// Sort ascending
+void sortAsc(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] > arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+}
+
+// Sort descending
+void sortDesc(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] < arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+}
+
+// SCAN
+void scan(int requests[], int n, int head, int diskSize) {
+    int seekTime = 0;
+    int left[MAX_REQUESTS], right[MAX_REQUESTS];
+    int l = 0, r = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head)
+            left[l++] = requests[i];
+        else
+            right[r++] = requests[i];
+    }
+
+    sortDesc(left, l);
+    sortAsc(right, r);
+
+    printf("\nSCAN Disk Scheduling:\n");
+
+    // Move left
+    for (int i = 0; i < l; i++) {
+        seekTime += abs(head - left[i]);
+        head = left[i];
+    }
+
+    // Move to 0
+    if (l > 0) {
+        seekTime += abs(head - 0);
+        head = 0;
+    }
+
+    // Move right
+    for (int i = 0; i < r; i++) {
+        seekTime += abs(head - right[i]);
+        head = right[i];
+    }
+
+    printf("Total seek time: %d\n", seekTime);
+}
+
+// C-SCAN
+void cscan(int requests[], int n, int head, int diskSize) {
+    int seekTime = 0;
+    int left[MAX_REQUESTS], right[MAX_REQUESTS];
+    int l = 0, r = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head)
+            left[l++] = requests[i];
+        else
+            right[r++] = requests[i];
+    }
+
+    sortAsc(left, l);
+    sortAsc(right, r);
+
+    printf("\nC-SCAN Disk Scheduling:\n");
+
+    // Move right
+    for (int i = 0; i < r; i++) {
+        seekTime += abs(head - right[i]);
+        head = right[i];
+    }
+
+    // Move to end and jump
+    seekTime += abs(head - (diskSize - 1));
+    head = 0;
+    seekTime += diskSize - 1;
+
+    // Move left part
+    for (int i = 0; i < l; i++) {
+        seekTime += abs(head - left[i]);
+        head = left[i];
+    }
+
+    printf("Total seek time: %d\n", seekTime);
+}
+
+// LOOK
+void look(int requests[], int n, int head) {
+    int seekTime = 0;
+    int left[MAX_REQUESTS], right[MAX_REQUESTS];
+    int l = 0, r = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head)
+            left[l++] = requests[i];
+        else
+            right[r++] = requests[i];
+    }
+
+    sortDesc(left, l);
+    sortAsc(right, r);
+
+    printf("\nLOOK Disk Scheduling:\n");
+
+    for (int i = 0; i < l; i++) {
+        seekTime += abs(head - left[i]);
+        head = left[i];
+    }
+
+    for (int i = 0; i < r; i++) {
+        seekTime += abs(head - right[i]);
+        head = right[i];
+    }
+
+    printf("Total seek time: %d\n", seekTime);
+}
+
+// C-LOOK
+void clook(int requests[], int n, int head) {
+    int seekTime = 0;
+    int left[MAX_REQUESTS], right[MAX_REQUESTS];
+    int l = 0, r = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head)
+            left[l++] = requests[i];
+        else
+            right[r++] = requests[i];
+    }
+
+    sortAsc(left, l);
+    sortAsc(right, r);
+
+    printf("\nC-LOOK Disk Scheduling:\n");
+
+    for (int i = 0; i < r; i++) {
+        seekTime += abs(head - right[i]);
+        head = right[i];
+    }
+
+    if (l > 0) {
+        seekTime += abs(head - left[0]);
+        head = left[0];
+    }
+
+    for (int i = 0; i < l; i++) {
+        seekTime += abs(head - left[i]);
+        head = left[i];
+    }
+
+    printf("Total seek time: %d\n", seekTime);
+}
+
+// Main
+int main() {
+    int requests[] = {176, 79, 34, 60, 92, 11, 41, 114};
+    int n = sizeof(requests) / sizeof(requests[0]);
+    int head = 50;
+    int diskSize = 200;
+
+    fcfs(requests, n, head);
+    scan(requests, n, head, diskSize);
+    cscan(requests, n, head, diskSize);
+    look(requests, n, head);
+    clook(requests, n, head);
+
+    return 0;
+}
