@@ -1,0 +1,68 @@
+#include <stdio.h>
+
+int main() {
+    int memsize = 15;
+    int pagesize, nofpage;
+    int p[100];
+    int frameno, offset;
+    int logadd, phyadd;
+    int i;
+    int choice = 0;
+
+    printf("Memory size is %d\n", memsize);
+
+    // Input page size
+    printf("Enter page size: ");
+    scanf("%d", &pagesize);
+
+    // Validate page size
+    if (pagesize <= 0 || pagesize > memsize) {
+        printf("Invalid page size! Must be between 1 and %d.\n", memsize);
+        return 1;
+    }
+
+    // Check if memory divides evenly
+    if (memsize % pagesize != 0) {
+        printf("Warning: Memory not evenly divisible by page size.\n");
+    }
+
+    // Calculate number of pages
+    nofpage = memsize / pagesize;
+    printf("Number of pages: %d\n", nofpage);
+
+    // Input frame numbers
+    for (i = 0; i < nofpage; i++) {
+        printf("Enter the frame number for page %d: ", i);
+        scanf("%d", &p[i]);
+
+        if (p[i] < 0) {
+            printf("Invalid frame number! Must be non-negative.\n");
+            return 1;
+        }
+    }
+
+    // Address translation loop
+    do {
+        printf("Enter a logical address: ");
+        scanf("%d", &logadd);
+
+        // Validate logical address
+        if (logadd < 0 || logadd >= memsize) {
+            printf("Invalid logical address! Must be between 0 and %d.\n", memsize - 1);
+            continue;
+        }
+
+        frameno = logadd / pagesize;
+        offset = logadd % pagesize;
+
+        phyadd = (p[frameno] * pagesize) + offset;
+
+        printf("Physical address is: %d\n", phyadd);
+
+        printf("Do you want to continue (1 for Yes, 0 for No)?: ");
+        scanf("%d", &choice);
+
+    } while (choice == 1);
+
+    return 0;
+}
